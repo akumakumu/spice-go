@@ -20,12 +20,18 @@ import (
 func main() {
 	// Load the .env file
 	err := godotenv.Load()
+
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatalf("Error loading .env file : %v", err)
 	}
 
-	// Get the MongoDB URI from the environment variable
+	// Get Variables from the environment
 	mongoURI := os.Getenv("MONGO_URI")
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		port = "8080"
+	}
 
 	// MongoDB Driver
 	// Use the SetServerAPIOptions() method to set the version of the Stable API on the client
@@ -100,5 +106,9 @@ func main() {
 		c.JSON(http.StatusOK, doc)
 	})
 
-	routes.Run()
+	log.Printf("Running on Port %s", port)
+
+	if err := routes.Run(":" + port); err != nil {
+		log.Fatalf("Failed to Start : %v", err)
+	}
 }
