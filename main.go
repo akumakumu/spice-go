@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -51,7 +52,7 @@ func main() {
 	// Gin Init
 	routes := gin.Default()
 
-	// Get Fish Documents
+	// Get All Fish Documents
 	routes.GET("/fish", func(c *gin.Context) {
 		coll := client.Database("resep").Collection("ikan")
 
@@ -64,13 +65,39 @@ func main() {
 
 		defer cursor.Close(context.Background())
 
-		var documents []bson.M
+		var docs []bson.M
 
-		if err = cursor.All(context.Background(), &documents); err != nil {
+		if err = cursor.All(context.Background(), &docs); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": documents})
+		c.JSON(http.StatusOK, gin.H{"message": docs})
+	})
+
+	// GET One Fish Documents
+	routes.GET("/fish/:id", func(c *gin.Context) {
+		coll := client.Database("resep").Collection("ikan")
+
+		// Obtain ID from Parameter
+		id := c.Param("id")
+		objID, err := primitive.ObjectIDFromHex(id)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		}
+
+		var doc bson.M
+
+		if err = coll.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&doc); err != nil {
+			if err == mongo.ErrNoDocuments {
+				c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			}
+			return
+		}
+
+		c.JSON(http.StatusOK, doc)
 	})
 
 	routes.Run()

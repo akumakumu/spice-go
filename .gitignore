@@ -17,5 +17,5 @@
 # Go workspace file
 go.work
 
-# Environtment
+# Environment
 .env
