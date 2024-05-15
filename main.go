@@ -48,12 +48,30 @@ func main() {
 	}
 	fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")
 
-	// Gin
-	r := gin.Default()
-	r.GET("/hello", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "hello mom!",
-		})
+	// Gin Init
+	routes := gin.Default()
+
+	// Get Fish Documents
+	routes.GET("/fish", func(c *gin.Context) {
+		coll := client.Database("resep").Collection("ikan")
+
+		cursor, err := coll.Find(context.Background(), bson.D{})
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
+		}
+
+		defer cursor.Close(context.Background())
+
+		var documents []bson.M
+
+		if err = cursor.All(context.Background(), &documents); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": documents})
 	})
-	r.Run()
+
+	routes.Run()
 }
