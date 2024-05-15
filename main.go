@@ -56,18 +56,18 @@ func main() {
 	routes.GET("/fish", func(c *gin.Context) {
 		coll := client.Database("resep").Collection("ikan")
 
-		cursor, err := coll.Find(context.Background(), bson.D{})
+		cursor, err := coll.Find(context.TODO(), bson.D{})
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			return
 		}
 
-		defer cursor.Close(context.Background())
+		defer cursor.Close(context.TODO())
 
 		var docs []bson.M
 
-		if err = cursor.All(context.Background(), &docs); err != nil {
+		if err = cursor.All(context.TODO(), &docs); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		}
 
@@ -88,7 +88,7 @@ func main() {
 
 		var doc bson.M
 
-		if err = coll.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&doc); err != nil {
+		if err = coll.FindOne(context.TODO(), bson.M{"_id": objID}).Decode(&doc); err != nil {
 			if err == mongo.ErrNoDocuments {
 				c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
 			} else {
